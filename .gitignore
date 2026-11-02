@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+
+# Local configuration & environment variables
+*.env
+bridge.env
+.env
+
+# Mount points and runtime state
+/bridge-auth/
+/proxy-socket/
+/codex-runtime/
+*.sock
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs and temporary files
+*.log
+tmp/
+.runtime/

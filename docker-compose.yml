@@ -1,0 +1,52 @@
+services:
+  astrbot:
+    networks:
+      - bot
+      - codex-private
+  codex-bridge:
+    image: m.daocloud.io/docker.io/soulter/astrbot:latest
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 256
+    mem_limit: 1g
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=128m,mode=1777
+    volumes:
+      - ./bridge:/bridge:ro
+      - ./bridge-auth:/auth
+      - ./codex-runtime:/codex:ro
+      - ./proxy-socket:/proxy
+    env_file: [./bridge.env]
+    environment:
+      HOME: /tmp
+      CODEX_HOME: /auth
+      CODEX_BIN: /codex/node_modules/.bin/codex
+      BRIDGE_HOST: 0.0.0.0
+      BRIDGE_PORT: "18098"
+      HTTPS_PROXY: http://127.0.0.1:7890
+      HTTP_PROXY: http://127.0.0.1:7890
+      ALL_PROXY: http://127.0.0.1:7890
+    working_dir: /tmp
+    entrypoint: ["python3", "/bridge/supervisor.py"]
+    networks: [codex-private]
+    depends_on: [proxy-host]
+    restart: unless-stopped
+  proxy-host:
+    image: m.daocloud.io/docker.io/soulter/astrbot:latest
+    user: "1000:1000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 128m
+    network_mode: host
+    volumes:
+      - ./bridge:/bridge:ro
+      - ./proxy-socket:/proxy
+    entrypoint: ["python3", "/bridge/relay.py", "host", "--socket", "/proxy/proxy.sock"]
+    restart: unless-stopped
+networks:
+  codex-private:
+    internal: true
